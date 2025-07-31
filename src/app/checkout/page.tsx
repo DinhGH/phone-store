@@ -44,7 +44,7 @@ export default function CheckoutPage() {
 
       return () => clearTimeout(timeout);
     }
-  }, [log]);
+  }, [router]);
 
   if (!product) return null;
 

@@ -1,27 +1,29 @@
+// app/api/cart/[id]/route.ts
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 
-export async function DELETE(
-  req: NextRequest,
-  { params }: { params: { id: string } }
-) {
-  const cartItemId = parseInt(params.id);
+type Context = {
+  params: { id: string };
+};
+
+export async function DELETE(req: NextRequest, { params }: Context) {
+  const cartItemId = parseInt(params.id); // ✅ Sử dụng destructured params trực tiếp
 
   if (isNaN(cartItemId)) {
-    return NextResponse.json({ error: "Invalid ID" }, { status: 400 });
+    return NextResponse.json({ error: "ID không hợp lệ" }, { status: 400 });
   }
 
   try {
-    await prisma.cart.delete({
+    const deletedItem = await prisma.cart.delete({
       where: { id: cartItemId },
     });
 
-    return NextResponse.json({ message: "Deleted successfully" });
+    return NextResponse.json({
+      message: "Đã xoá sản phẩm khỏi giỏ hàng",
+      deletedItem,
+    });
   } catch (error) {
-    console.error("Error deleting cart item:", error);
-    return NextResponse.json(
-      { error: "Failed to delete cart item" },
-      { status: 500 }
-    );
+    console.error("Lỗi khi xoá sản phẩm:", error);
+    return NextResponse.json({ error: "Lỗi server" }, { status: 500 });
   }
 }
