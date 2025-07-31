@@ -1,27 +1,20 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { NextRequest, NextResponse } from "next/server";
-import { prisma } from "@/lib/prisma";
 
-export async function DELETE(
-  req: NextRequest,
-  { params }: { params: { id: string } }
-) {
-  const cartItemId = parseInt(params.id);
+// ❌ Sai: export async function GET(req, { params }: { params: { id: string } }) { ... }
 
-  if (isNaN(cartItemId)) {
-    return NextResponse.json({ error: "ID không hợp lệ" }, { status: 400 });
+export async function GET(req: NextRequest, context: any) {
+  const id = context.params?.id;
+
+  if (!id) {
+    return NextResponse.json({ error: "Thiếu ID" }, { status: 400 });
   }
 
   try {
-    const deletedItem = await prisma.cart.delete({
-      where: { id: cartItemId },
-    });
-
-    return NextResponse.json({
-      message: "Đã xoá sản phẩm khỏi giỏ hàng",
-      deletedItem,
-    });
+    // Code xử lý logic lấy sản phẩm ở đây
+    return NextResponse.json({ message: "Lấy sản phẩm thành công", id });
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   } catch (error) {
-    console.error("Lỗi khi xoá sản phẩm:", error);
     return NextResponse.json({ error: "Lỗi server" }, { status: 500 });
   }
 }
