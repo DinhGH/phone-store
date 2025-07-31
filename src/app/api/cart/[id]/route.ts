@@ -3,15 +3,12 @@ import { prisma } from "@/lib/prisma";
 
 export async function DELETE(
   req: NextRequest,
-  context: { params: { id: string } }
+  { params }: { params: { id: string } }
 ) {
-  const cartItemId = parseInt(context.params.id);
+  const cartItemId = parseInt(params.id);
 
   if (isNaN(cartItemId)) {
-    return NextResponse.json(
-      { error: "Invalid ID" },
-      { status: 400 }
-    );
+    return NextResponse.json({ error: "Invalid ID" }, { status: 400 });
   }
 
   try {
