@@ -1,11 +1,11 @@
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 
 export async function DELETE(
-  req: Request,
-  { params }: { params: { id: string } }
+  req: NextRequest,
+  context: { params: { id: string } }
 ) {
-  const cartItemId = parseInt(params.id);
+  const cartItemId = parseInt(context.params.id);
 
   if (isNaN(cartItemId)) {
     return NextResponse.json(
