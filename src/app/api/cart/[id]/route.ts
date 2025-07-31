@@ -1,13 +1,11 @@
-// app/api/cart/[id]/route.ts
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 
-type Context = {
-  params: { id: string };
-};
-
-export async function DELETE(req: NextRequest, { params }: Context) {
-  const cartItemId = parseInt(params.id); // ✅ Sử dụng destructured params trực tiếp
+export async function DELETE(
+  req: NextRequest,
+  { params }: { params: { id: string } }
+) {
+  const cartItemId = parseInt(params.id);
 
   if (isNaN(cartItemId)) {
     return NextResponse.json({ error: "ID không hợp lệ" }, { status: 400 });
