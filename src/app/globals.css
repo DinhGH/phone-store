@@ -12,15 +12,47 @@
   --font-mono: var(--font-geist-mono);
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
-}
-
+html,
 body {
   background: var(--background);
   color: var(--foreground);
   font-family: Arial, Helvetica, sans-serif;
+  height: 100vh;
+  width: 100%;
+  box-sizing: border-box;
+  min-width: 1500px;
+  min-height: 690;
+}
+
+ul > li:hover {
+  text-decoration: underline;
+  cursor: pointer;
+}
+
+div > h6:hover {
+  text-decoration: underline;
+  cursor: pointer;
+}
+
+section.intro {
+  margin: 40px;
+}
+
+section.intro > h1 {
+  font-size: x-large;
+  font-weight: bold;
+  margin: 15px 0px;
+}
+
+section.intro > h2 {
+  font-size: large;
+  font-weight: bold;
+  margin: 7.5px 0px;
+}
+
+ul.ul-content > li:hover {
+  text-decoration: none;
+}
+ul.ul-content > li {
+  margin: 10px 0px;
 }

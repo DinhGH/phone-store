@@ -1,0 +1,75 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+model Logo {
+  id        Int      @id @default(autoincrement())
+  name      String
+  url       String
+  createdAt DateTime @default(now())
+}
+
+model Product {
+  id               Int            @id @default(autoincrement())
+  name             String
+  original         Int
+  discount         Int
+  smemberDiscount  Int            @default(0)
+  sstudentDiscount Int            @default(0)
+  imageUrl         String
+  inch             String
+  capacity         String
+  rating           Float
+  createdAt        DateTime       @default(now())
+  detail           ProductDetail? @relation("ProductToDetail")
+}
+
+model Phanloai {
+  id        Int      @id @default(autoincrement())
+  name      String
+  url       String
+  createdAt DateTime @default(now())
+}
+
+model ProductDetail {
+  id      Int     @id
+  brand   String?
+  color   String?
+  chip    String?
+  camera  String?
+  battery String?
+
+  product Product @relation("ProductToDetail", fields: [id], references: [id], onDelete: Cascade)
+}
+
+model User {
+  id       Int    @id @default(autoincrement())
+  username String @unique
+  password String
+  role     String @default("user")
+  cart     Cart[]
+  createdAt DateTime @default(now())
+}
+
+model Cart {
+  id        Int    @id @default(autoincrement())
+  username  String
+  productId Int
+  name      String
+  price     Int
+  quantity  Int
+  imageUrl  String
+
+  user      User   @relation(fields: [username], references: [username], onDelete: Cascade)
+}
