@@ -1,74 +1,53 @@
-// api/cart/route.ts
+// /app/api/cart/route.ts
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { cookies } from "next/headers";
 
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+export async function GET(req: NextRequest) {
+  const cookieStore = cookies();
+  const username = (await cookieStore).get("username")?.value;
 
-export async function POST(req: NextRequest) {
-  const body = await req.json();
-  const { username, product } = body;
-
-  if (!username || !product) {
-    return NextResponse.json({ error: "Thiếu thông tin" }, { status: 400 });
+  if (!username) {
+    return NextResponse.json({ error: "Chưa đăng nhập" }, { status: 401 });
   }
 
   try {
-    const existingItem = await prisma.cart.findFirst({
-      where: { username, productId: product.id },
+    const cartItems = await prisma.cart.findMany({
+      where: { username },
     });
 
-    if (existingItem) {
-      await prisma.cart.update({
-        where: { id: existingItem.id },
-        data: {
-          quantity: { increment: 1 },
-        },
-      });
-    } else {
-      await prisma.cart.create({
-        data: {
-          username,
-          productId: product.id,
-          name: product.name,
-          price: product.original,
-          quantity: 1,
-          imageUrl: product.imageUrl,
-        },
-      });
-    }
-
-    return NextResponse.json({ message: "Đã thêm vào giỏ" });
+    return NextResponse.json(cartItems);
   } catch (error) {
-    console.error(error);
-    return NextResponse.json({ error: "Server error" }, { status: 500 });
+    console.error("Lỗi khi lấy giỏ hàng:", error);
+    return NextResponse.json({ error: "Lỗi server" }, { status: 500 });
   }
 }
 
-// api/cart/Router.ts 
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
-export async function GET(req: NextRequest) {
-  const cookieStore = await cookies();
-  const username = cookieStore.get("user")?.value;
+
+export async function POST(req: NextRequest) {
+  const cookieStore = cookies();
+  const username = (await cookieStore).get("username")?.value;
 
   if (!username) {
-    return NextResponse.json({ error: "Thiếu username" }, { status: 400 });
+    return NextResponse.json({ error: "Chưa đăng nhập" }, { status: 401 });
   }
 
   try {
-    const user = await prisma.user.findUnique({
-      where: { username },
-      include: {
-        cart: true, 
-      },
-    });
+    const body = await req.json();
+    const { productId, name, price, quantity, imageUrl } = body;
 
-    if (!user) {
-      return NextResponse.json({ error: "Không tìm thấy user" }, { status: 404 });
+    if (!productId || !name || !price || !quantity || !imageUrl) {
+      return NextResponse.json({ error: "Thiếu thông tin" }, { status: 400 });
     }
 
-    return NextResponse.json(user.cart);
+    const newItem = await prisma.cart.create({
+      data: { username, productId, name, price, quantity, imageUrl },
+    });
+
+    return NextResponse.json(newItem, { status: 201 });
   } catch (error) {
-    console.error(error);
+    console.error("Lỗi khi thêm vào giỏ hàng:", error);
     return NextResponse.json({ error: "Lỗi server" }, { status: 500 });
   }
 }

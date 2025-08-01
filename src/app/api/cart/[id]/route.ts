@@ -1,20 +1,44 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 import { NextRequest, NextResponse } from "next/server";
+import { prisma } from "@/lib/prisma";
+import { cookies } from "next/headers";
 
-// ❌ Sai: export async function GET(req, { params }: { params: { id: string } }) { ... }
+export async function DELETE(
+  req: NextRequest,
+  { params }: { params: { id: string } }
+) {
+  const cookieStore = cookies();
+  const username = (await cookieStore).get("username")?.value;
 
-export async function GET(req: NextRequest, context: any) {
-  const id = context.params?.id;
+  if (!username) {
+    return NextResponse.json({ error: "Chưa đăng nhập" }, { status: 401 });
+  }
 
-  if (!id) {
-    return NextResponse.json({ error: "Thiếu ID" }, { status: 400 });
+  const cartItemId = parseInt(params.id);
+  if (isNaN(cartItemId)) {
+    return NextResponse.json({ error: "ID không hợp lệ" }, { status: 400 });
   }
 
   try {
-    // Code xử lý logic lấy sản phẩm ở đây
-    return NextResponse.json({ message: "Lấy sản phẩm thành công", id });
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    // Kiểm tra item có thuộc về người dùng hay không
+    const item = await prisma.cart.findUnique({
+      where: { id: cartItemId },
+    });
+
+    if (!item) {
+      return NextResponse.json({ error: "Không tìm thấy sản phẩm" }, { status: 404 });
+    }
+
+    if (item.username !== username) {
+      return NextResponse.json({ error: "Không có quyền xóa sản phẩm này" }, { status: 403 });
+    }
+
+    await prisma.cart.delete({
+      where: { id: cartItemId },
+    });
+
+    return NextResponse.json({ message: "Xóa thành công" });
   } catch (error) {
+    console.error("Lỗi khi xoá sản phẩm:", error);
     return NextResponse.json({ error: "Lỗi server" }, { status: 500 });
   }
 }
