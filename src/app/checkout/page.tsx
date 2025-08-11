@@ -11,13 +11,15 @@ type Product = {
   original: number;
   discount: number;
   imageUrl: string;
+  price: number;
+  quantity: number;
   inch: string;
   capacity: string;
 };
 
 export default function CheckoutPage() {
   const router = useRouter();
-  const [product, setProduct] = useState<Product | null>(null);
+  const [products, setProducts] = useState<Product[]>([]);
   const [log, showLog] = useState(false);
 
   const [fullName, setFullName] = useState("");
@@ -26,36 +28,50 @@ export default function CheckoutPage() {
   const [phone, setPhone] = useState("");
   const [image, setImage] = useState<File | null>(null);
 
+  // Lấy dữ liệu từ localStorage
   useEffect(() => {
-    const item = localStorage.getItem("checkoutItem");
-    if (item) {
-      setProduct(JSON.parse(item));
+    const items = localStorage.getItem("checkoutItems");
+    if (items) {
+      try {
+        const parsed = JSON.parse(items);
+        if (Array.isArray(parsed)) {
+          setProducts(parsed);
+        } else {
+          // Nếu chỉ có 1 sản phẩm → ép thành mảng
+          setProducts([parsed]);
+        }
+      } catch (err) {
+        console.error("Lỗi parse checkoutItems:", err);
+        router.push("/");
+      }
     } else {
       router.push("/");
     }
   }, [router]);
 
+  // Auto redirect sau khi log thành công
   useEffect(() => {
     if (log) {
       const timeout = setTimeout(() => {
         showLog(false);
         router.push("/");
       }, 3000);
-
       return () => clearTimeout(timeout);
     }
-  }, [router]);
+  }, [log, router]);
 
-  if (!product) return null;
+  if (products.length === 0) return null;
 
-  const discountedPrice = (1 - product.discount / 100) * product.original;
+  const total = products.reduce(
+    (sum, item) => sum + item.price * item.quantity,
+    0,
+  );
 
-  const handlePayment = async () => {
+  const handlePayment = () => {
     if (!fullName || !address || !phone || !image) {
       alert("Vui lòng điền đầy đủ thông tin và tải ảnh thanh toán.");
       return;
     }
-
     showLog(true);
   };
 
@@ -75,64 +91,79 @@ export default function CheckoutPage() {
         🧾 Thanh toán
       </h1>
 
-      <div
-        className="
-          flex
-          p-4
-          bg-white
-          rounded-xl
-          shadow gap-4 items-center
-        "
-      >
-        <Image
-          src={product.imageUrl}
-          alt={product.name}
-          width={1000}
-          height={1000}
-          className="
-            object-cover
-            w-32 h-32
-            rounded-xl
-          "
-        />
+      {products.map((item) => (
         <div
+          key={item.id}
           className="
-            flex-1
+            flex
+            p-4 mb-4
+            bg-white
+            rounded-xl
+            shadow gap-4 items-center
           "
         >
-          <h2
+          <Image
+            src={item.imageUrl}
+            alt={item.name}
+            width={1000}
+            height={1000}
             className="
-              text-lg font-semibold
+              object-cover
+              w-24 h-24
+              rounded-xl
+            "
+          />
+          <div
+            className="
+              flex-1
             "
           >
-            {product.name}
-          </h2>
-          <p
-            className="
-              text-sm text-gray-600
-            "
-          >
-            {product.inch} inch - {product.capacity} GB
-          </p>
-          <p
-            className="
-              mt-2
-              text-red-600 text-xl font-bold
-            "
-          >
-            {discountedPrice.toLocaleString("vi-VN")}₫{" "}
-            <span
+            <h2
               className="
-                text-gray-500 text-sm
-                line-through
+                text-lg font-semibold
               "
             >
-              {product.original.toLocaleString("vi-VN")}₫
-            </span>
-          </p>
+              {item.name}
+            </h2>
+            <p
+              className="
+                text-sm text-gray-600
+              "
+            >
+              {item.inch} inch - {item.capacity} GB
+            </p>
+            <p
+              className="
+                mt-2
+                text-red-600 font-bold
+              "
+            >
+              {(item.price * item.quantity).toLocaleString("vi-VN")}₫
+            </p>
+            <p
+              className="
+                text-sm text-gray-500
+              "
+            >
+              Số lượng: {item.quantity}
+            </p>
+          </div>
         </div>
+      ))}
+
+      {/* Tổng tiền */}
+      <div
+        className="
+          mt-4 p-4
+          text-right font-bold text-lg
+          bg-gray-100
+          rounded-lg
+        "
+      >
+        Tổng cộng: {total.toLocaleString("vi-VN")}₫
       </div>
 
+      {/* Form thông tin */}
       <div
         className="
           mt-6 space-y-4
@@ -141,7 +172,6 @@ export default function CheckoutPage() {
         <input
           type="text"
           placeholder="Họ và tên người nhận"
-          required
           value={fullName}
           onChange={(e) => setFullName(e.target.value)}
           className="
@@ -152,7 +182,6 @@ export default function CheckoutPage() {
         />
         <input
           type="text"
-          required
           placeholder="Địa chỉ nhà"
           value={address}
           onChange={(e) => setAddress(e.target.value)}
@@ -177,7 +206,6 @@ export default function CheckoutPage() {
           type="tel"
           placeholder="Số điện thoại"
           value={phone}
-          required
           onChange={(e) => setPhone(e.target.value)}
           className="
             w-full
@@ -203,9 +231,8 @@ export default function CheckoutPage() {
           <input
             id="paymentImage"
             type="file"
-            accept="image/png, image/jpeg, image/jpg, image/gif, image/webp"
+            accept="image/*"
             onChange={(e) => setImage(e.target.files?.[0] || null)}
-            required
             className="
               block
               w-full
@@ -217,6 +244,7 @@ export default function CheckoutPage() {
         </div>
       </div>
 
+      {/* Buttons */}
       <div
         className="
           flex

@@ -3,6 +3,8 @@
 import { useEffect, useRef, useState } from "react";
 import { Trash2 } from "lucide-react";
 import Image from "next/image";
+import axios from "axios";
+import { useRouter } from "next/navigation";
 
 type Product = {
   id: number;
@@ -22,23 +24,18 @@ export default function Basket({
   const basketRef = useRef<HTMLDivElement>(null);
   const [cartItems, setCartItems] = useState<Product[]>([]);
   const [loading, setLoading] = useState(false);
+  const router = useRouter();
+
+  const handleCheckout = () => {
+    localStorage.setItem("checkoutItems", JSON.stringify(cartItems));
+    router.push("/checkout");
+  };
 
   const fetchCart = async () => {
     try {
-      const res = await fetch("/api/cart", {
-        method: "GET",
-        credentials: "include",
-      });
-
-      const data = await res.json();
-
-      if (!res.ok) {
-        console.error("Lỗi từ server:", data.error);
-        return;
-      }
-
-      setCartItems(data);
-      setItemCount(data.length);
+      const res = await axios.get("/api/cart", { withCredentials: true });
+      setCartItems(res.data);
+      setItemCount(res.data.length);
     } catch (error) {
       console.error("Lỗi khi tải giỏ hàng:", error);
     }
@@ -67,16 +64,14 @@ export default function Basket({
   const handleRemove = async (id: number) => {
     setLoading(true);
     try {
-      await fetch(`/api/cart/${id}`, {
-        method: "DELETE",
-      });
+      await axios.delete(`/api/cart?id=${id}`, { withCredentials: true });
       setCartItems((prev) => {
         const newCart = prev.filter((item) => item.id !== id);
         setItemCount(newCart.length);
         return newCart;
       });
     } catch (error) {
-      console.error("Lỗi khi xóa sản phẩm:", error);
+      console.error("Lỗi khi xoá sản phẩm:", error);
     } finally {
       setLoading(false);
     }
@@ -128,7 +123,7 @@ export default function Basket({
                 p-4
                 bg-white
                 rounded-xl
-                items-center gap-4 shadow
+                items-center gap-4 shadow hover:shadow-lg
               "
             >
               <Image
@@ -149,18 +144,20 @@ export default function Basket({
               >
                 <h2
                   className="
-                    font-semibold
+                    font-semibold text-black
                   "
                 >
                   {item.name}
                 </h2>
+
                 <p
                   className="
                     text-sm text-gray-500
                   "
                 >
-                  Giá: {item.price.toLocaleString()} đ
+                  Giá: {item.price.toLocaleString()}đ
                 </p>
+
                 <p
                   className="
                     text-sm text-gray-500
@@ -195,16 +192,17 @@ export default function Basket({
           >
             <p
               className="
-                text-lg font-bold
+                text-lg font-bold text-black
               "
             >
-              Tổng cộng: {getTotal().toLocaleString()} đ
+              Tổng cộng: {getTotal().toLocaleString()}đ
             </p>
             <button
+              onClick={handleCheckout}
               className="
                 px-6 py-2
                 text-white
-                bg-red-300
+                bg-red-400
                 rounded-xl
                 hover:bg-red-500 transition
               "

@@ -392,9 +392,17 @@ export default function PhoneDetailModal({
                       return;
                     }
 
+                    const checkoutProduct = {
+                      id: detail.id,
+                      name: detail.name,
+                      price: (1 - detail.discount / 100) * detail.original,
+                      quantity: 1,
+                      imageUrl: detail.imageUrl,
+                    };
+
                     localStorage.setItem(
-                      "checkoutItem",
-                      JSON.stringify(detail),
+                      "checkoutItems",
+                      JSON.stringify([checkoutProduct]),
                     );
 
                     router.push("/checkout");
