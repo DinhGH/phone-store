@@ -249,10 +249,9 @@ export default function ProductList({
 
       <div
         className="
-          grid grid-cols-2
+          grid grid-cols-3
           mt-14
           gap-4
-          md:grid-cols-3
           lg:grid-cols-4
         "
       >
