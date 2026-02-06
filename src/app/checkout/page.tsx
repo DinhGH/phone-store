@@ -7,14 +7,15 @@ import Log from "../components/Log";
 
 type Product = {
   id: number;
+  productId?: number;
   name: string;
-  original: number;
-  discount: number;
+  original?: number;
+  discount?: number;
   imageUrl: string;
   price: number;
   quantity: number;
-  inch: string;
-  capacity: string;
+  inch?: string;
+  capacity?: string;
 };
 
 export default function CheckoutPage() {
@@ -27,6 +28,8 @@ export default function CheckoutPage() {
   const [email, setEmail] = useState("");
   const [phone, setPhone] = useState("");
   const [image, setImage] = useState<File | null>(null);
+  const [submitting, setSubmitting] = useState(false);
+  const [orderId, setOrderId] = useState<number | null>(null);
 
   // Lấy dữ liệu từ localStorage
   useEffect(() => {
@@ -51,14 +54,14 @@ export default function CheckoutPage() {
 
   // Auto redirect sau khi log thành công
   useEffect(() => {
-    if (log) {
+    if (log && orderId) {
       const timeout = setTimeout(() => {
         showLog(false);
-        router.push("/");
+        router.push(`/orders/${orderId}`);
       }, 3000);
       return () => clearTimeout(timeout);
     }
-  }, [log, router]);
+  }, [log, orderId, router]);
 
   if (products.length === 0) return null;
 
@@ -67,12 +70,56 @@ export default function CheckoutPage() {
     0,
   );
 
-  const handlePayment = () => {
+  const handlePayment = async () => {
     if (!fullName || !address || !phone || !image) {
       alert("Vui lòng điền đầy đủ thông tin và tải ảnh thanh toán.");
       return;
     }
-    showLog(true);
+
+    if (products.length === 0) {
+      alert("Giỏ hàng trống.");
+      return;
+    }
+
+    setSubmitting(true);
+    try {
+      const payload = {
+        fullName,
+        address,
+        email,
+        phone,
+        paymentImageName: image?.name,
+        items: products.map((item) => ({
+          productId: item.productId ?? item.id,
+          name: item.name,
+          price: item.price,
+          quantity: item.quantity,
+          imageUrl: item.imageUrl,
+        })),
+      };
+
+      const res = await fetch("/api/orders", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+      });
+
+      if (!res.ok) {
+        const data = await res.json();
+        alert(data.error || "Không thể tạo đơn hàng.");
+        return;
+      }
+
+      const data = await res.json();
+      localStorage.removeItem("checkoutItems");
+      setOrderId(data.id);
+      showLog(true);
+    } catch (error) {
+      console.error("Lỗi khi thanh toán:", error);
+      alert("Không thể tạo đơn hàng.");
+    } finally {
+      setSubmitting(false);
+    }
   };
 
   return (
@@ -125,13 +172,17 @@ export default function CheckoutPage() {
             >
               {item.name}
             </h2>
-            <p
-              className="
-                text-sm text-gray-600
-              "
-            >
-              {item.inch} inch - {item.capacity} GB
-            </p>
+            {(item.inch || item.capacity) && (
+              <p
+                className="
+                  text-sm text-gray-600
+                "
+              >
+                {item.inch ? `${item.inch} inch` : ""}
+                {item.inch && item.capacity ? " - " : ""}
+                {item.capacity ? `${item.capacity} GB` : ""}
+              </p>
+            )}
             <p
               className="
                 mt-2
@@ -265,6 +316,7 @@ export default function CheckoutPage() {
         </button>
         <button
           onClick={handlePayment}
+          disabled={submitting}
           className="
             w-1/2
             mt-6 py-3 mx-4
@@ -272,9 +324,10 @@ export default function CheckoutPage() {
             bg-[#5467e4]
             rounded-lg
             hover:bg-[#3c45f5] transition
+            disabled:opacity-60
           "
         >
-          Xác nhận thanh toán
+          {submitting ? "Đang xử lý..." : "Xác nhận thanh toán"}
         </button>
       </div>
 
@@ -282,7 +335,7 @@ export default function CheckoutPage() {
         <Log
           status={true}
           title="Thanh toán thành công"
-          message="Cảm ơn bạn đã tin tưởng và lựa chọn DPHONE, việc thanh toán đang được kiểm tra. Sản phẩm sẽ được vận chuyển sớm đến bạn!"
+          message="Cảm ơn bạn đã tin tưởng và lựa chọn DPHONE. Đơn hàng đã được tạo và giỏ hàng đã được xoá."
         />
       )}
     </div>

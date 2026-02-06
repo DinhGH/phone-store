@@ -55,6 +55,30 @@ export interface Cart {
   imageUrl: string;
 }
 
+export interface OrderItem {
+  id: number;
+  orderId: number;
+  productId: number;
+  name: string;
+  price: number;
+  quantity: number;
+  imageUrl: string;
+}
+
+export interface Order {
+  id: number;
+  username: string;
+  fullName: string;
+  address: string;
+  email?: string;
+  phone: string;
+  total: number;
+  paymentImageName?: string;
+  status: string;
+  createdAt: Date;
+  items: OrderItem[];
+}
+
 export interface Stats {
   products: number;
   users: number;

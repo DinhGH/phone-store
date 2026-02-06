@@ -29,7 +29,7 @@ import LoginButton from "./components/LoginButton";
 export default function Home() {
   const navItems = [
     { icon: FaStore, label: "Cửa hàng gần bạn", href: "#" },
-    { icon: FaClipboardList, label: "Tra cứu đơn hàng", href: "#" },
+    { icon: FaClipboardList, label: "Tra cứu đơn hàng", href: "/orders" },
     { icon: FaPhoneAlt, label: "0365472162", href: "tel:0365472162" },
     { icon: FaMobileAlt, label: "Tải ứng dụng", href: "#" },
   ];

@@ -59,6 +59,7 @@ model User {
   password String
   role     String @default("user")
   cart     Cart[]
+  orders   Order[]
   createdAt DateTime @default(now())
 }
 
@@ -72,4 +73,32 @@ model Cart {
   imageUrl  String
 
   user      User   @relation(fields: [username], references: [username], onDelete: Cascade)
+}
+
+model Order {
+  id               Int         @id @default(autoincrement())
+  username         String
+  fullName         String
+  address          String
+  email            String?
+  phone            String
+  total            Int
+  paymentImageName String?
+  status           String      @default("pending")
+  createdAt        DateTime    @default(now())
+  items            OrderItem[]
+
+  user             User        @relation(fields: [username], references: [username], onDelete: Cascade)
+}
+
+model OrderItem {
+  id        Int    @id @default(autoincrement())
+  orderId   Int
+  productId Int
+  name      String
+  price     Int
+  quantity  Int
+  imageUrl  String
+
+  order     Order  @relation(fields: [orderId], references: [id], onDelete: Cascade)
 }
